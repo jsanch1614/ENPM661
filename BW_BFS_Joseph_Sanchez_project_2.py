@@ -11,7 +11,7 @@ pygame.init()
 
 ppmm = 142 / 25.4 # 142 ppi of current display
 
-height = int(ppmm*50)
+height = int(ppmm*50) # 50mm box requirement
 width = int(ppmm*180)
 
 
@@ -20,9 +20,10 @@ obstacle_color = (255, 192, 203)
 char_color = (255, 80, 200)
 
 # border
+# these are the mathematical models of the letter geometry for the obstacle space
 # J
-J_rect = pygame.draw.rect(surface, obstacle_color, pygame.Rect(117, 39, 54, 122), width=30)
-J_arc = pygame.draw.arc(surface, obstacle_color, pygame.Rect(49, 89, 122, 122), start_angle=2.90, stop_angle=0, width=60)
+J_rect = pygame.draw.rect(surface, obstacle_color, pygame.Rect(117, 39, 54, 122), width=30) # basic geometry of rectangle that forms "J"
+J_arc = pygame.draw.arc(surface, obstacle_color, pygame.Rect(49, 89, 122, 122), start_angle=2.90, stop_angle=0, width=60) 
 # S
 S_arc = pygame.draw.arc(surface, obstacle_color, pygame.Rect(169, 39, 112, 112), start_angle=0.1, stop_angle=4.81239, width=60)
 S_arc_2 = pygame.draw.arc(surface, obstacle_color, pygame.Rect(169, 94, 122, 122), start_angle=-3.24, stop_angle=1.97, width=60)
@@ -73,7 +74,7 @@ two_rect4 = pygame.draw.rect(surface, char_color, pygame.Rect(610, 140, 32, 32),
 two_rect5 = pygame.draw.rect(surface, char_color, pygame.Rect(590, 170, 120, 32), width=30)
 
 
-
+# these if statement branches are for the user input of start and goal state x and y coordinates
 # get start state
 
 start_state_x = input("Enter Start State x coordinate: ")
@@ -102,9 +103,10 @@ elif start_state_y >= height:
     start_state_y = int(start_state_y)
 
 
-start_color = surface.get_at((start_state_x, start_state_y))
+start_color = surface.get_at((start_state_x, start_state_y)) # pixel value of the selected coordinate is checked
 
-while start_color != (0, 0, 0):
+while start_color != (0, 0, 0): # the selected pixel value is checked agains the black background for proper selection. If the coordinate is not in the free space as 
+                                # defined by the mathematical models above, then the user is prompted to try again
     print("Error. Selected coordinate is within character boundry. Please try again.")
     start_state_x = input("Enter Start State x coordinate: ")
     start_state_x = int(start_state_x)
@@ -201,6 +203,8 @@ while goal_color != (0, 0, 0):
 
 goal_state = (goal_state_y, goal_state_x)
 
+
+# conversion for movement attempts
 def tuple_to_list(state):
     return list(state) 
 
@@ -212,38 +216,35 @@ def list_to_tuple(state):
 # surface = pygame.display.set_mode((900, 250))  # window
 robot_radius = 5
 # 
-# Moving the pieces
+# Moving the robot
+# these functions provide the 8 degrees of freedom for the point robot
 def move_left(state, row, col):
 
-    original_state = state
+    original_state = state # original position is saved
 
     if col - 1 > 0:
 
-        state = tuple_to_list(state)
+        state = tuple_to_list(state) # conversion for easier handling
 
         state[1] = state[1]-1 
         
-        state = list_to_tuple(state)
+        state = list_to_tuple(state) # new position is updated
     # pygame.display.flip()
-    
-    print("pixel coord: ", state[1], state[0])
-    print("color: ", surface.get_at((250, 1))[:3])
 
-    new_color = surface.get_at((state[1], state[0]))
+    new_color = surface.get_at((state[1], state[0])) # new pixel value is recorded
 
-    if new_color[:3] == obstacle_color:
+    if new_color[:3] == obstacle_color: # if the new pixel position is the same color as the defined characters then the pixel does not update
         state = original_state
     
-    return state
+    return state # returns either updated position or same position
     
 def move_right(state, row, col):
     original_state = state
 
     if col + 1 < width:
-        state = tuple_to_list(state) # convert the tuple to a list for manipulation
-        state[1] = state[1]+1 # current cell (0) becomes right cell values
-        # state[row][col+1] = 0 # right cell becomes 0
-        state = list_to_tuple(state) # convert list back into tuple
+        state = tuple_to_list(state) 
+        state[1] = state[1]+1 
+        state = list_to_tuple(state) 
     # pygame.display.flip()
     
     print("current coord: ", state[0], state[1])
@@ -288,10 +289,10 @@ def move_diag_up_left(state, row, col):
     original_state = state
 
     if col - 1 > 0 and row - 1 > 0:
-        state = tuple_to_list(state) # convert the tuple to a list for manipulation
+        state = tuple_to_list(state) 
         state[0] = state[0]-1 
         state[1] = state[1]-1 
-        state = list_to_tuple(state) # convert list back into tuple
+        state = list_to_tuple(state) 
     # pygame.display.flip()
     
     new_color = surface.get_at((state[1], state[0]))
@@ -349,9 +350,8 @@ def move_diag_down_right(state, row, col):
     return state
 
 
-# start_state = ((250, 0))
 
-
+# this possible moves function will call the move functions and return the updated tuples
 def possibleMoves(state, row, col):
 
     new_posA = move_left(state, row, col)
@@ -367,10 +367,8 @@ def possibleMoves(state, row, col):
     return new_posA, new_posB, new_posC, new_posD, new_posE, new_posF, new_posG, new_posH
 
 
-openList = [start_state]
 closedList = []
 
-# parents.clear()
 parents = {}
 
 children = {}
@@ -378,6 +376,8 @@ children = {}
 child_to_parent = {}
 child_to_parent_index = {}
 
+# in this function the updated states are compared to the closed list for confirmed movement
+# if the attempted move is the same as the current position of in the closed list then the position is not updated
 def getPossibleMoves(new_node_x, row, col, counter):
 
     node_a, node_b, node_c, node_d, node_e, node_f, node_g, node_h = possibleMoves(new_node_x, row, col)
@@ -388,13 +388,13 @@ def getPossibleMoves(new_node_x, row, col, counter):
     # check if new nodes are in closed list, if not, append to open list
     if node_a not in closedList and node_a not in openList and node_a != new_node_x:
         openList.append(node_a)
-        child_to_parent[node_a] = new_node_x
+        child_to_parent[node_a] = new_node_x # child to parent dictionary is updated with the new position and the position before it (the parent)
         child_to_parent_index[node_a] = counter
          
 
     if node_b not in closedList and node_b not in openList and node_b != new_node_x:
         openList.append(node_b)
-        child_to_parent[node_b] = new_node_x
+        child_to_parent[node_b] = new_node_x 
         child_to_parent_index[node_b] = counter
 
 
@@ -437,13 +437,9 @@ def getPossibleMoves(new_node_x, row, col, counter):
     return
 
 
-# start_state = ((250, 1))
-
-openList = deque([start_state])
+openList = deque([start_state]) # open list begins with start state to initialize the loop
 
 closedList = set()
-
-# goal_state = (1, 900)
 
 
 counter = 0
@@ -451,7 +447,10 @@ end = 0
 
 start_time = time.time()
 
-
+# this is the main loop
+# the first open list state is opped and compared to the goal state
+# the check goal value is passed on to evaluate next moves
+# if the check goal is equal to the goal state then the loop is broken
 while len(openList):
 
     for i in range(len(openList)):
@@ -464,7 +463,7 @@ while len(openList):
             print("enddddddd: ", end)
             break
 
-        closedList.add(check_goal)
+        closedList.add(check_goal) # add looked at node to closed list
 
         # zero = get_zero_state(check_goal)
         a, b = check_goal[0], check_goal[1] #zero[0][0], zero[0][1]
@@ -489,6 +488,9 @@ while len(openList):
 pygame.quit()
 print("end: ", end)
 
+
+# the shortest path is discovered using the child to parent dict from before
+# the dict is reversed to account for the start of the search beginning at the end of the dict
 shortest_path = [goal_state]
 current = goal_state
 
@@ -498,7 +500,7 @@ while current != start_state:
 
 shortest_path.reverse()
 
-print("--- %s seconds ---" % (time.time() - start_time))
+print("--- %s seconds ---" % (time.time() - start_time)) # time for full search and shortest path is recorded for analysis
 
 
 
@@ -513,6 +515,8 @@ obstacle_color = (255, 192, 203)
 char_color = (255, 80, 100)
 
 
+
+# this updates the display to hide the 2mm border geometry color for ease of visual inspection
 # characters
 # J
 J_rect = pygame.draw.rect(surface, char_color, pygame.Rect(128, 50, 32, 100), width=30)
@@ -540,6 +544,8 @@ two_rect4 = pygame.draw.rect(surface, char_color, pygame.Rect(610, 140, 32, 32),
 two_rect5 = pygame.draw.rect(surface, char_color, pygame.Rect(590, 170, 120, 32), width=30)
 
 
+# this full search loop was used to record the frames of each node explored to later compile into an mp4 video
+# this loop displays an animation, but can stall if the search tree is large
 # full search
 for i in range(len(parents)): # -151000):
     # print(state)
@@ -551,8 +557,15 @@ for i in range(len(parents)): # -151000):
     
     # pygame.image.save(selectOutput("Select a file to write to:")); Thank you for your answers!
 
-pygame.display.flip() 
+    pygame.display.flip() # if the animation stalls, comment this out and uncomment the pygame.display.flip() below to see the result in full with
+                          # shortest path animation
 
+# pygame.display.flip() # if the animation stalls uncomment
+
+
+# this loop was also used to record the frames for making the video
+# this will play an animation of the shortest path
+# a better animation has been recorded in the mp4
 # shortest path
 for i in range(len(shortest_path)):
     # print(state)
@@ -565,5 +578,5 @@ for i in range(len(shortest_path)):
 
     
 # pygame.display.flip() 
-pygame.time.wait(10000)  # Pause for 5 seconds
+pygame.time.wait(10000)  # Pause for 10 seconds
 pygame.quit()
