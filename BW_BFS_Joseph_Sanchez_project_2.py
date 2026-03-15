@@ -1,3 +1,6 @@
+
+# https://github.com/jsanch1614/ENPM661
+
 import numpy as np
 import pandas as pd
 import time
@@ -555,8 +558,6 @@ for i in range(len(parents)): # -151000):
     pygame.draw.circle(surface, color=(25, 0, 255), center=(parents[i][1], parents[i][0]), radius=1)
     # pygame.image.save(surface, f"full_search_images\\full_search_images" + str(i) + ".jpeg")
     
-    # pygame.image.save(selectOutput("Select a file to write to:")); Thank you for your answers!
-
     pygame.display.flip() # if the animation stalls, comment this out and uncomment the pygame.display.flip() below to see the result in full with
                           # shortest path animation
 
